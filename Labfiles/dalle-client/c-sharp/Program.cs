@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Azure;
 using System.IO;
 using System.Text;
@@ -7,6 +7,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 // Add references
+using Azure.Identity;
+using Azure.AI.Projects;
+using Azure.AI.OpenAI;
+using OpenAI.Images;
 
 
 namespace dalle_client
@@ -26,12 +30,18 @@ namespace dalle_client
                 string project_connection = configuration["PROJECT_CONNECTION"];
                 string model_deployment = configuration["MODEL_DEPLOYMENT"];
 
-                // Initialize the project client
+                // Initialize the OpenAI client
+                DefaultAzureCredentialOptions options = new()
+                {
+                    ExcludeEnvironmentCredential = true,
+                    ExcludeManagedIdentityCredential = true
+                };
+                
+                ImageClient openAIimageClient = new AzureOpenAIClient(
+                    new Uri(project_connection),
+                    new DefaultAzureCredential(options)).GetImageClient(model_deployment);
 
 
-
-                // Get an OpenAI client
- 
 
 
                 // Loop until the user types 'quit'
@@ -46,6 +56,14 @@ namespace dalle_client
                     if (input_text.ToLower() != "quit")
                     {
                         // Generate an image
+                        GeneratedImage imageGeneration = await openAIimageClient.GenerateImageAsync(
+                        input_text,
+                        new ImageGenerationOptions()
+                        {
+                            Size = GeneratedImageSize.W1024xH1024
+                        }
+                        );
+                        imageUrl = imageGeneration.ImageUri;
                         
 
 
